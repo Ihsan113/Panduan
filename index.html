@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panduan Deploy TopUp Store ke Vercel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --bg2: #13141a;
+      --bg3: #1a1c24;
+      --border: #2a2d38;
+      --accent: #00e5a0;
+      --accent2: #0096ff;
+      --text: #e8eaf0;
+      --muted: #7a7f96;
+      --danger: #ff4757;
+      --warn: #ffa502;
+      --success: #00e5a0;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* HEADER */
+    .site-header {
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      padding: 18px 32px; position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .site-header .icon { font-size: 26px; }
+    .site-header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 21px; letter-spacing: 2px; color: var(--accent); line-height: 1; }
+    .site-header p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .progress-wrap { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .progress-label { font-size: 12px; color: var(--muted); }
+    .progress-bar { width: 120px; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); width: 0%; transition: width 0.3s; }
+
+    /* LAYOUT */
+    .layout { display: flex; min-height: calc(100vh - 66px); }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 240px; flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border);
+      padding: 24px 0; position: sticky; top: 66px; height: calc(100vh - 66px); overflow-y: auto;
+    }
+    .sidebar-title { font-size: 10px; font-weight: 700; letter-spacing: 3px; color: var(--muted); padding: 0 20px 10px; text-transform: uppercase; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 9px 20px;
+      text-decoration: none; color: var(--muted); font-size: 13px; font-weight: 500;
+      border-left: 3px solid transparent; transition: all 0.2s;
+    }
+    .nav-item:hover { background: var(--bg3); color: var(--text); }
+    .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(0,229,160,0.05); }
+    .nav-item .num { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--accent); min-width: 16px; }
+
+    /* MAIN */
+    .main { flex: 1; padding: 40px 48px; max-width: 860px; }
+
+    /* INTRO */
+    .intro-card {
+      background: linear-gradient(135deg, rgba(0,229,160,0.07), rgba(0,150,255,0.04));
+      border: 1px solid rgba(0,229,160,0.18); border-radius: 16px; padding: 28px; margin-bottom: 48px;
+    }
+    .intro-card h2 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--accent); margin-bottom: 6px; }
+    .intro-card p { color: var(--muted); font-size: 14px; max-width: 520px; }
+    .prereq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-top: 18px; }
+    .prereq-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+    .prereq-item .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+    /* SECTION */
+    .section { margin-bottom: 52px; }
+    .section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .section-num { font-family: 'Bebas Neue', sans-serif; font-size: 38px; color: var(--accent); line-height: 1; opacity: 0.35; min-width: 34px; }
+    .section-title h2 { font-family: 'Bebas Neue', sans-serif; font-size: 21px; letter-spacing: 1.5px; color: var(--text); }
+    .section-title p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    /* ACTIVITY CARD */
+    .activity-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 8px; transition: border-color 0.2s; }
+    .activity-card:hover { border-color: rgba(0,229,160,0.25); }
+    .activity-header { padding: 13px 18px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
+    .activity-header:hover { background: rgba(255,255,255,0.02); }
+    .step-badge {
+      background: rgba(0,229,160,0.1); color: var(--accent);
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+      padding: 3px 8px; border-radius: 5px; white-space: nowrap; border: 1px solid rgba(0,229,160,0.2);
+    }
+    .step-badge.alt { background: rgba(0,150,255,0.1); color: var(--accent2); border-color: rgba(0,150,255,0.2); }
+    .step-badge.warn { background: rgba(255,165,2,0.1); color: var(--warn); border-color: rgba(255,165,2,0.2); }
+    .activity-title { font-size: 14px; font-weight: 600; flex: 1; }
+    .expand-icon { color: var(--muted); font-size: 11px; transition: transform 0.2s; margin-left: auto; }
+    .activity-card.open .expand-icon { transform: rotate(180deg); }
+    .activity-body { display: none; padding: 0 18px 18px; border-top: 1px solid var(--border); }
+    .activity-card.open .activity-body { display: block; }
+
+    /* STEPS */
+    .steps-list { margin: 14px 0 0; }
+    .step-item { display: flex; gap: 12px; margin-bottom: 9px; font-size: 13px; }
+    .step-circle {
+      width: 22px; height: 22px; border-radius: 50%; background: var(--bg3);
+      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: var(--accent); flex-shrink: 0; margin-top: 2px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .step-text a { color: var(--accent2); }
+    .step-text strong { color: var(--accent); font-weight: 600; }
+    code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--bg3); padding: 1px 5px; border-radius: 4px; color: var(--accent); }
+
+    /* CODE BLOCK */
+    .code-block {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 16px; margin: 12px 0; font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: #c9d1d9; overflow-x: auto; line-height: 1.9; white-space: pre;
+    }
+    .code-block .c { color: var(--muted); }
+    .code-block .cmd { color: var(--accent); }
+    .code-block .str { color: #98c379; }
+
+    /* INFO BOXES */
+    .info-box { border-radius: 8px; padding: 11px 14px; font-size: 13px; margin: 12px 0; display: flex; gap: 10px; line-height: 1.5; }
+    .info-box.info { background: rgba(0,150,255,0.07); border: 1px solid rgba(0,150,255,0.2); color: #7ec8ff; }
+    .info-box.warn { background: rgba(255,165,2,0.07); border: 1px solid rgba(255,165,2,0.22); color: var(--warn); }
+    .info-box.danger { background: rgba(255,71,87,0.07); border: 1px solid rgba(255,71,87,0.2); color: #ff8a96; }
+    .info-box.success { background: rgba(0,229,160,0.07); border: 1px solid rgba(0,229,160,0.2); color: var(--accent); }
+
+    /* TOKEN HIGHLIGHT BOX */
+    .token-box {
+      background: linear-gradient(135deg, rgba(255,165,2,0.08), rgba(255,71,87,0.05));
+      border: 1px solid rgba(255,165,2,0.3); border-left: 4px solid var(--warn);
+      border-radius: 10px; padding: 16px 18px; margin: 14px 0;
+    }
+    .token-box h4 { color: var(--warn); font-size: 13px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .token-steps { list-style: none; }
+    .token-steps li { font-size: 13px; color: var(--text); padding: 4px 0; display: flex; gap: 8px; align-items: flex-start; }
+    .token-steps li::before { content: "→"; color: var(--warn); font-size: 12px; margin-top: 2px; flex-shrink: 0; }
+    .token-url { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent2); background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; margin: 10px 0; display: block; }
+
+    /* ENV TABLE */
+    .env-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 14px 0; }
+    .env-table th { background: var(--bg3); padding: 9px 12px; text-align: left; font-weight: 700; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+    .env-table td { padding: 9px 12px; border-bottom: 1px solid rgba(42,45,56,0.5); vertical-align: top; }
+    .env-table tr:last-child td { border-bottom: none; }
+    .env-table tr:hover td { background: rgba(255,255,255,0.015); }
+    .env-key { font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 11px; white-space: nowrap; }
+    .env-val { font-family: 'JetBrains Mono', monospace; color: var(--muted); font-size: 11px; }
+    .env-note { color: var(--text); font-size: 12px; }
+
+    /* CHECKLIST */
+    .checklist { list-style: none; }
+    .checklist li { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13px; border-bottom: 1px solid rgba(42,45,56,0.5); }
+    .checklist li:last-child { border-bottom: none; }
+    .check-icon { color: var(--accent); font-size: 14px; }
+
+    /* TROUBLE */
+    .trouble-card { background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--danger); border-radius: 10px; padding: 15px 18px; margin-bottom: 10px; }
+    .trouble-title { font-size: 14px; font-weight: 600; color: #ff8a96; margin-bottom: 0; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+    .trouble-solutions { display: none; margin-top: 10px; }
+    .trouble-card.open .trouble-solutions { display: block; }
+    .trouble-solutions li { margin: 5px 0 5px 16px; color: var(--text); font-size: 13px; }
+    .trouble-solutions li strong { color: var(--accent); }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { padding: 20px 14px; }
+      .prereq-grid { grid-template-columns: 1fr 1fr; }
+      .progress-wrap { display: none; }
+      .env-table { font-size: 11px; }
+      .env-table th, .env-table td { padding: 7px 8px; }
+      .env-key { white-space: normal; word-break: break-all; }
+      .code-block { font-size: 11px; padding: 10px 12px; }
+      .intro-card { padding: 20px 16px; }
+      .section { margin-bottom: 36px; }
+      .section-num { font-size: 28px; }
+    }
+    @media (max-width: 480px) {
+      .prereq-grid { grid-template-columns: 1fr; }
+      .activity-title { font-size: 13px; }
+      .site-header h1 { font-size: 17px; }
+      .token-box { padding: 12px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <span class="icon">🛒</span>
+  <div>
+    <h1>PANDUAN DEPLOY TOPUP STORE</h1>
+    <p>Ke Vercel — Langkah demi Langkah untuk Pemula</p>
+  </div>
+  <div class="progress-wrap">
+    <span class="progress-label" id="progLabel">0 / 10 bagian</span>
+    <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-title">Navigasi</div>
+    <a class="nav-item" href="#intro"><span class="num">✦</span> Sebelum Mulai</a>
+    <a class="nav-item" href="#b1"><span class="num">1</span> Upload ke GitHub</a>
+    <a class="nav-item" href="#b2"><span class="num">2</span> MongoDB Atlas</a>
+    <a class="nav-item" href="#b3"><span class="num">3</span> Setup Flowix</a>
+    <a class="nav-item" href="#b4"><span class="num">4</span> Deploy ke Vercel</a>
+    <a class="nav-item" href="#b5"><span class="num">5</span> Environment Variables</a>
+    <a class="nav-item" href="#b6"><span class="num">6</span> Cron Job</a>
+    <a class="nav-item" href="#b7"><span class="num">7</span> Setelah Deploy</a>
+    <a class="nav-item" href="#b8"><span class="num">8</span> Troubleshooting</a>
+    <a class="nav-item" href="#b9"><span class="num">9</span> Termux Auto Push</a>
+    <a class="nav-item" href="#b10"><span class="num">10</span> Nama Web & Bantuan</a>
+    <a class="nav-item" href="#done"><span class="num">✓</span> Checklist Final</a>
+  </nav>
+
+  <main class="main">
+
+    <!-- INTRO -->
+    <section id="intro" class="section">
+      <div class="intro-card">
+        <h2>Sebelum Mulai — Yang Kamu Butuhkan</h2>
+        <p>Panduan ini untuk pemula. Ikuti langkah demi langkah, jangan skip, dan website-mu akan online dalam kurang dari 1 jam.</p>
+        <div class="prereq-grid">
+          <div class="prereq-item"><div class="dot"></div><div><strong>GitHub</strong> &nbsp;<small style="color:var(--muted)">github.com — gratis</small></div></div>
+          <div class="prereq-item"><div class="dot"></div><div><strong>Vercel</strong> &nbsp;<small style="color:var(--muted)">vercel.com — gratis</small></div></div>
+          <div class="prereq-item"><div class="dot"></div><div><strong>MongoDB Atlas</strong> &nbsp;<small style="color:var(--muted)">gratis</small></div></div>
+          <div class="prereq-item"><div class="dot"></div><div><strong>Flowix</strong> &nbsp;<small style="color:var(--muted)">daftar merchant</small></div></div>
+          <div class="prereq-item"><div class="dot"></div><div><strong>Cron-job.org</strong> &nbsp;<small style="color:var(--muted)">gratis</small></div></div>
+          <div class="prereq-item"><div class="dot"></div><div><strong>Folder topup-fixed</strong> &nbsp;<small style="color:var(--muted)">file project-mu</small></div></div>
+        </div>
+        <div class="info-box warn" style="margin-top:16px">⚠️ <span>Jangan pernah share file <strong>.env</strong> atau API Key ke siapapun. Semua nilainya bersifat rahasia seperti password.</span></div>
+      </div>
+    </section>
+
+    <!-- BAGIAN 1 -->
+    <section id="b1" class="section">
+      <div class="section-header">
+        <div class="section-num">01</div>
+        <div class="section-title">
+          <h2>Upload Project ke GitHub</h2>
+          <p>Simpan kode project di internet agar bisa diambil Vercel</p>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 1.1</span>
+          <span class="activity-title">Daftar & Buat Akun GitHub</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Buka <a href="https://github.com" target="_blank">github.com</a></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Klik tombol <strong>Sign Up</strong> di pojok kanan atas</div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Isi email, password, dan username sesukamu</div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Verifikasi email yang dikirim ke inbox-mu</div></div>
+            <div class="step-item"><div class="step-circle">5</div><div class="step-text">Selesai! Kamu sudah punya akun GitHub</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 1.2</span>
+          <span class="activity-title">Buat Repository Baru</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 4px">Repository (repo) adalah "folder online" tempat menyimpan project-mu.</p>
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Klik tombol <strong>+ → New repository</strong> di navbar atas</div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Isi <strong>Repository name</strong>: misalnya <code>topup-store</code></div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Pilih <strong>Private</strong> agar kode tidak kelihatan orang lain</div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Centang <strong>Add a README file</strong></div></div>
+            <div class="step-item"><div class="step-circle">5</div><div class="step-text">Klik tombol <strong>Create repository</strong></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 1.3A</span>
+          <span class="activity-title">Upload File Project — Via GitHub Web (Termudah)</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Di halaman repo baru, klik <strong>uploading an existing file</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text"><strong>Drag & drop</strong> semua file dari folder <code>topup-fixed</code></div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Pastikan semua file masuk termasuk folder <code>src/api/public/</code></div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Scroll ke bawah, klik <strong>Commit changes</strong></div></div>
+          </div>
+          <div class="info-box danger">⛔ <span>JANGAN upload file <strong>.env</strong> ke GitHub. Kita akan isi nilainya langsung di Vercel nanti.</span></div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge alt">LANGKAH 1.3B</span>
+          <span class="activity-title">Upload File Project — Via Terminal / Git</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+
+          <!-- TOKEN SECTION -->
+          <div class="token-box">
+            <h4>🔑 Penting! GitHub Sekarang Pakai Token, Bukan Password</h4>
+            <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Kalau kamu push lewat terminal, GitHub tidak terima password biasa lagi. Kamu harus buat <strong style="color:var(--warn)">Personal Access Token (Classic)</strong> dulu sebagai pengganti password.</p>
+            <ul class="token-steps">
+              <li>Login ke GitHub, klik foto profil → <strong>Settings</strong></li>
+              <li>Scroll ke bawah, klik <strong>Developer settings</strong> (menu paling bawah kiri)</li>
+              <li>Klik <strong>Personal access tokens → Tokens (classic)</strong></li>
+              <li>Klik <strong>Generate new token → Generate new token (classic)</strong></li>
+              <li>Isi <strong>Note</strong>: misal <code>topup-deploy</code></li>
+              <li>Set <strong>Expiration</strong>: bebas (misal 90 days atau No expiration)</li>
+              <li>Centang scope: <strong>repo</strong> (cukup ini saja)</li>
+              <li>Klik <strong>Generate token</strong> di bawah</li>
+              <li><strong style="color:var(--warn)">SALIN tokennya sekarang!</strong> Token hanya tampil sekali. Simpan di notepad.</li>
+            </ul>
+            <code class="token-url">https://github.com/settings/tokens</code>
+            <div class="info-box warn" style="margin-top:8px">💡 <span>Token ini yang kamu paste sebagai <strong>password</strong> saat terminal minta password. Username tetap username GitHub-mu.</span></div>
+          </div>
+
+          <p style="font-size:13px;font-weight:600;color:var(--text);margin:16px 0 8px">Setelah punya token, jalankan perintah ini:</p>
+          <div class="code-block"><span class="c"># Masuk ke folder project</span>
+<span class="cmd">cd</span> topup-fixed
+
+<span class="c"># Inisialisasi git</span>
+<span class="cmd">git init</span>
+<span class="cmd">git add</span> .
+<span class="cmd">git commit</span> -m <span class="str">"first commit"</span>
+
+<span class="c"># Hubungkan ke GitHub (ganti username & nama repo)</span>
+<span class="cmd">git remote add origin</span> https://github.com/username/topup-store.git
+<span class="cmd">git branch</span> -M main
+<span class="cmd">git push</span> -u origin main
+
+<span class="c"># Saat diminta:</span>
+<span class="c"># Username: username GitHub-mu</span>
+<span class="c"># Password: paste TOKEN yang tadi disalin (bukan password GitHub!)</span></div>
+
+          <div class="info-box info">💡 <span>Kalau mau biar tidak diminta token terus setiap push, jalankan: <code>git config --global credential.helper store</code> — token akan disimpan otomatis.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BAGIAN 2 -->
+    <section id="b2" class="section">
+      <div class="section-header">
+        <div class="section-num">02</div>
+        <div class="section-title">
+          <h2>Buat Database di MongoDB Atlas</h2>
+          <p>Database gratis di cloud untuk menyimpan semua data toko</p>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 2.1</span>
+          <span class="activity-title">Daftar & Setup MongoDB Atlas</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Buka <a href="https://cloud.mongodb.com" target="_blank">cloud.mongodb.com</a> → klik <strong>Register / Sign Up</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Daftar dengan email atau akun Google</div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Pilih paket <strong>Free (M0)</strong> — sudah cukup untuk website topup</div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Cloud Provider: <strong>AWS</strong> — Region: <strong>US East (us-east-1)</strong> <span style="color:var(--accent);font-size:12px">← pilih ini, server US lebih dekat ke Vercel = lebih cepat</span></div></div>
+            <div class="step-item"><div class="step-circle">5</div><div class="step-text">Klik <strong>Create Deployment</strong></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 2.2</span>
+          <span class="activity-title">Buat User Database</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Menu kiri → <strong>Database Access → Add New Database User</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Pilih <strong>Password Authentication</strong></div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Isi Username: <code>adminku</code> dan Password yang kuat</div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text"><strong>Catat username & password ini</strong> — akan dipakai di connection string</div></div>
+            <div class="step-item"><div class="step-circle">5</div><div class="step-text">Pilih <strong>Atlas Admin</strong> → klik <strong>Add User</strong></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 2.3</span>
+          <span class="activity-title">Izinkan Akses dari Semua IP</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Menu kiri → <strong>Network Access → Add IP Address</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Klik <strong>Allow Access from Anywhere</strong> agar Vercel bisa connect</div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Klik <strong>Confirm</strong></div></div>
+          </div>
+          <div class="info-box warn">⚠️ <span>Jika tombol <strong>"Allow Access from Anywhere"</strong> tidak muncul, isi secara manual: ketik <code>0.0.0.0/0</code> di kolom IP Address, lalu klik <strong>Confirm</strong>.</span></div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 2.4</span>
+          <span class="activity-title">Salin Connection String</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Klik <strong>Clusters → Connect → Drivers</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Pilih Driver: <strong>Node.js</strong>, Version: <strong>5.5 or later</strong></div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Salin connection string-nya, contoh:</div></div>
+          </div>
+          <div class="code-block">mongodb+srv://adminku:&lt;password&gt;@cluster0.abc123.mongodb.net/?appName=Cluster0</div>
+          <div class="info-box warn">💡 <span>Ganti <strong>&lt;password&gt;</strong> dengan password yang kamu buat. Kalau ada karakter <strong>@</strong> atau <strong>#</strong>, ganti dengan <strong>%40</strong> / <strong>%23</strong>.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BAGIAN 3 -->
+    <section id="b3" class="section">
+      <div class="section-header">
+        <div class="section-num">03</div>
+        <div class="section-title">
+          <h2>Daftar & Setup Flowix</h2>
+          <p>Payment gateway untuk QRIS dan produk game top up</p>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 3.1</span>
+          <span class="activity-title">Daftar & Login Flowix</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Buka <a href="https://flowix.web.id" target="_blank">flowix.web.id</a> → klik <strong>Daftar / Register</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Isi data lengkap: nama, email, nomor HP</div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Verifikasi email yang dikirim</div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Login ke dashboard Flowix</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 3.2</span>
+          <span class="activity-title">Ambil API Key & Merchant ID</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Di dashboard Flowix, buka menu <strong>API Settings</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Salin <strong>API Key</strong> — format: <code>sk-xxxx-xxxxxxxxxxxx</code></div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Salin <strong>Merchant ID</strong> — format: <code>MID-XXXXX</code></div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text"><strong>Simpan kedua nilai ini</strong> — akan dipakai di .env nanti</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 3.3</span>
+          <span class="activity-title">Setup Webhook di Flowix</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Di menu <strong>API Settings</strong>, cari bagian <strong>Webhook URL</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Isi: <code>https://nama-projectmu.vercel.app/api/webhook</code></div></div>
+          </div>
+          <div class="info-box info">💡 <span>Belum tahu URL Vercel? Lanjutkan ke Bagian 4 dulu, lalu kembali sini setelah dapat URL.</span></div>
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Salin <strong>Webhook Secret</strong> yang muncul — format: <code>whsec_xxxxxxxxx</code></div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text"><strong>Simpan Webhook Secret ini</strong> — akan dipakai di .env</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BAGIAN 4 -->
+    <section id="b4" class="section">
+      <div class="section-header">
+        <div class="section-num">04</div>
+        <div class="section-title">
+          <h2>Deploy ke Vercel</h2>
+          <p>Hosting gratis untuk React + Node.js dengan auto-rebuild dari GitHub</p>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 4.1</span>
+          <span class="activity-title">Daftar & Login Vercel</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Buka <a href="https://vercel.com" target="_blank">vercel.com</a> → klik <strong>Sign Up</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Pilih <strong>Continue with GitHub</strong> — cara paling mudah</div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Izinkan Vercel akses ke akun GitHub-mu</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 4.2</span>
+          <span class="activity-title">Import Project dari GitHub</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Klik tombol <strong>Add New... → Project</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Kamu akan lihat daftar repository GitHub-mu</div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Cari dan klik <strong>Import</strong> di sebelah repo <code>topup-store</code></div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Di halaman configure project, biarkan semua setting default</div></div>
+          </div>
+          <div class="info-box danger">⚠️ <span><strong>BELUM klik Deploy!</strong> Isi dulu Environment Variables di Bagian 5.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BAGIAN 5 -->
+    <section id="b5" class="section">
+      <div class="section-header">
+        <div class="section-num">05</div>
+        <div class="section-title">
+          <h2>Isi Environment Variables di Vercel</h2>
+          <p>Tempat menyimpan API Key, password, dan konfigurasi rahasia</p>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 5.1</span>
+          <span class="activity-title">Daftar Lengkap Environment Variables</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 14px">Scroll ke bagian <strong>Environment Variables</strong> di halaman configure Vercel, lalu isi satu per satu:</p>
+          <table class="env-table">
+            <thead><tr><th>Nama Variable</th><th>Contoh Nilai</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td class="env-key">MONGODB_URI</td><td class="env-val">mongodb+srv://...</td><td class="env-note">Connection string MongoDB (Bagian 2)</td></tr>
+              <tr><td class="env-key">FLOWIX_API_KEY</td><td class="env-val">sk-xxxx-xxxxxx</td><td class="env-note">API Key dari Flowix (Bagian 3)</td></tr>
+              <tr><td class="env-key">FLOWIX_MERCHANT_ID</td><td class="env-val">MID-XXXXX</td><td class="env-note">Merchant ID dari Flowix</td></tr>
+              <tr><td class="env-key">WEBHOOK_SECRET</td><td class="env-val">whsec_xxxxxx</td><td class="env-note">Webhook Secret dari Flowix (Bagian 3)</td></tr>
+              <tr>
+                <td class="env-key">ADMIN_SECRET</td>
+                <td class="env-val">passwordRahasiaKu99</td>
+                <td class="env-note">Buat sendiri bebas, contoh: <code>passwordRahasiaKu99</code></td>
+              </tr>
+              <tr style="background:rgba(255,165,2,0.05)">
+                <td class="env-key" style="border-left:3px solid var(--warn)">VITE_ADMIN_SECRET</td>
+                <td class="env-val" style="color:var(--warn);font-weight:700">passwordRahasiaKu99</td>
+                <td class="env-note">⚠️ <strong style="color:var(--warn)">HARUS SAMA PERSIS</strong> dengan <code>ADMIN_SECRET</code> — isi nilai yang identik!</td>
+              </tr>
+              <tr style="background:rgba(255,165,2,0.05)">
+                <td class="env-key" style="border-left:3px solid var(--warn)">VITE_ADMIN_PASSWORD</td>
+                <td class="env-val" style="color:var(--warn);font-weight:700">passwordRahasiaKu99</td>
+                <td class="env-note">⚠️ <strong style="color:var(--warn)">HARUS SAMA PERSIS</strong> dengan <code>ADMIN_SECRET</code> — isi nilai yang identik!</td>
+              </tr>
+              <tr><td class="env-key">CRON_SECRET</td><td class="env-val">kodeRahasia123</td><td class="env-note">Kode rahasia untuk cron job — buat sendiri</td></tr>
+              <tr><td class="env-key">PRICE_TOKEN_SECRET</td><td class="env-val">19a00081dd...</td><td class="env-note">Token keamanan harga produk — generate!</td></tr>
+              <tr><td class="env-key">VAPID_PUBLIC_KEY</td><td class="env-val">BK3KOS93...</td><td class="env-note">Push notifikasi — opsional, generate!</td></tr>
+              <tr><td class="env-key">VAPID_PRIVATE_KEY</td><td class="env-val">DrD9MWORG...</td><td class="env-note">Push notifikasi — opsional, generate!</td></tr>
+              <tr><td class="env-key">VAPID_SUBJECT</td><td class="env-val">mailto:email@...</td><td class="env-note">Email untuk push notif — opsional</td></tr>
+              <tr><td class="env-key">VITE_STORE_NAME</td><td class="env-val">Toko Top Up</td><td class="env-note">Nama toko yang tampil di website</td></tr>
+              <tr><td class="env-key" style="text-decoration:line-through;opacity:0.5">TZ</td><td class="env-val" style="opacity:0.5">Asia/Jakarta</td><td class="env-note"><span style="color:var(--muted)">⚠️ <strong>Hapus / skip saja</strong> — sudah otomatis Asia/Jakarta, tidak perlu diisi</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge warn">PENTING</span>
+          <span class="activity-title">📍 Cara & Lokasi Mengisi Environment Variables di Vercel</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="info-box info" style="margin-top:14px">💡 <span>Environment Variables diisi di halaman <strong>Configure Project</strong> sebelum klik Deploy — atau bisa ditambah kapan saja di <strong>Vercel → Project → Settings → Environment Variables</strong>.</span></div>
+          <p style="font-size:13px;font-weight:700;color:var(--text);margin:16px 0 8px">CARA MENGISI (Sebelum Deploy Pertama):</p>
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Di halaman <strong>Configure Project</strong> Vercel, scroll ke bawah sampai ketemu bagian <strong>Environment Variables</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Klik kolom <strong>Key</strong> → ketik nama variabel (contoh: <code>MONGODB_URI</code>)</div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Klik kolom <strong>Value</strong> → paste nilai variabelnya</div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Klik tombol <strong>Add</strong> → ulangi untuk semua variabel lainnya</div></div>
+            <div class="step-item"><div class="step-circle">5</div><div class="step-text">Setelah semua terisi, baru klik <strong>Deploy</strong></div></div>
+          </div>
+          <p style="font-size:13px;font-weight:700;color:var(--text);margin:16px 0 8px">CARA MENGISI / EDIT (Setelah Project Sudah Deploy):</p>
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Buka <a href="https://vercel.com/dashboard" target="_blank">vercel.com/dashboard</a> → klik nama project-mu</div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Klik tab <strong>Settings</strong> di navbar atas</div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Di menu kiri, klik <strong>Environment Variables</strong></div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Klik <strong>Add New</strong> → isi Key dan Value → klik <strong>Save</strong></div></div>
+            <div class="step-item"><div class="step-circle">5</div><div class="step-text"><strong>Wajib Redeploy!</strong> Setelah edit/tambah variabel, klik tab <strong>Deployments</strong> → klik titik tiga (⋮) di deployment terbaru → <strong>Redeploy</strong></div></div>
+          </div>
+          <div class="info-box danger">⛔ <span>Perubahan Environment Variables <strong>TIDAK otomatis berlaku</strong> sebelum kamu Redeploy. Jangan lupa klik Redeploy setiap kali mengubah variabel!</span></div>
+          <p style="font-size:13px;font-weight:700;color:var(--warn);margin:16px 0 8px">⚠️ PERHATIAN KHUSUS — Variabel yang Harus Sama:</p>
+          <div style="background:rgba(255,165,2,0.08);border:1px solid rgba(255,165,2,0.3);border-radius:10px;padding:16px 18px;font-size:13px;line-height:2.2;">
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center">
+              <code>ADMIN_SECRET</code><span><span style="color:var(--muted)">= bebas, buat sendiri &nbsp;→&nbsp;</span><code style="color:#98c379">passwordRahasiaKu99</code></span>
+              <code style="border-left:3px solid var(--warn);padding-left:8px">VITE_ADMIN_SECRET</code><span><strong style="color:var(--warn)">= HARUS SAMA PERSIS</strong> <span style="color:var(--muted)">dengan ADMIN_SECRET &nbsp;→&nbsp;</span><code style="color:#98c379">passwordRahasiaKu99</code></span>
+              <code style="border-left:3px solid var(--warn);padding-left:8px">VITE_ADMIN_PASSWORD</code><span><strong style="color:var(--warn)">= HARUS SAMA PERSIS</strong> <span style="color:var(--muted)">dengan ADMIN_SECRET &nbsp;→&nbsp;</span><code style="color:#98c379">passwordRahasiaKu99</code></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 5.2</span>
+          <span class="activity-title">Generate PRICE_TOKEN_SECRET & VAPID Keys</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;font-weight:600;margin:14px 0 6px">PRICE_TOKEN_SECRET — jalankan di terminal:</p>
+          <div class="code-block"><span class="cmd">node</span> -e <span class="str">"console.log(require('crypto').randomBytes(32).toString('hex'))"</span>
+
+<span class="c"># Hasilnya seperti ini — salin ke Vercel:</span>
+19a00081dd887b9871f5acbb0f4a29b9a026c1a8b664568451c60d076beaf688</div>
+          <div class="info-box info">💡 <span>Tidak punya terminal? Buka <a href="https://generate-random.org/api-key-generator" target="_blank" style="color:var(--accent2)">generate-random.org</a> → pilih panjang 64, format Hex.</span></div>
+
+          <p style="font-size:13px;font-weight:600;margin:16px 0 6px">VAPID Keys — generate lewat website (tanpa install apapun):</p>
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Buka <a href="https://vapidkeys.com" target="_blank" style="color:var(--accent2)">vapidkeys.com</a> → klik <strong>Generate</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Salin <strong>Public Key</strong> → paste ke <code>VAPID_PUBLIC_KEY</code> di Vercel</div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Salin <strong>Private Key</strong> → paste ke <code>VAPID_PRIVATE_KEY</code> di Vercel</div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Isi <code>VAPID_SUBJECT</code> dengan email kamu, format: <code>mailto:email@gmail.com</code></div></div>
+          </div>
+          <div class="info-box success">✅ <span>Tidak perlu install npm atau terminal — generate langsung dari browser, langsung copy-paste ke Vercel.</span></div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 5.3</span>
+          <span class="activity-title">Klik Deploy!</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="info-box success" style="margin-top:14px">✅ <span>Semua variabel sudah diisi? Klik tombol <strong>Deploy</strong> di bagian bawah. Vercel akan build 1–3 menit. Setelah selesai, kamu dapat URL seperti <code>topup-store-username.vercel.app</code></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BAGIAN 6 -->
+    <section id="b6" class="section">
+      <div class="section-header">
+        <div class="section-num">06</div>
+        <div class="section-title">
+          <h2>Setup Cron Job</h2>
+          <p>Auto-expire transaksi yang tidak dibayar lebih dari 1 jam</p>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 6.1</span>
+          <span class="activity-title">Daftar di Cron-job.org</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Buka <a href="https://cron-job.org" target="_blank">cron-job.org</a> → klik <strong>Sign Up</strong> (gratis)</div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Daftar dengan email dan verifikasi</div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Login ke dashboard</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 6.2</span>
+          <span class="activity-title">Buat Cron Job Baru</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Klik <strong>CREATE CRONJOB</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Title: <code>TopUp Expire Check</code></div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">URL: <code>https://nama-projectmu.vercel.app/api/cron-expire</code></div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Di <strong>Request Headers</strong> → <strong>Add Header</strong>:</div></div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;margin:8px 0;line-height:2">
+            <span style="color:var(--muted)">Header Name :</span> <span style="color:var(--accent)">Authorization</span><br>
+            <span style="color:var(--muted)">Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span> <span style="color:#98c379">Bearer kodeRahasiaKamu</span>
+          </div>
+          <div class="info-box info">💡 <span>Ganti <strong>kodeRahasiaKamu</strong> dengan nilai <strong>CRON_SECRET</strong> yang diisi di Vercel tadi.</span></div>
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">5</div><div class="step-text">Schedule: <strong>Every 15 minutes</strong> atau isi manual <code>*/15 * * * *</code></div></div>
+            <div class="step-item"><div class="step-circle">6</div><div class="step-text">Klik <strong>CREATE</strong></div></div>
+          </div>
+          <div class="info-box success">✅ <span>Setiap 15 menit, cron-job.org akan membersihkan transaksi yang expired dari database.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BAGIAN 7 -->
+    <section id="b7" class="section">
+      <div class="section-header">
+        <div class="section-num">07</div>
+        <div class="section-title">
+          <h2>Setelah Deploy: Tes & Konfigurasi</h2>
+          <p>Pastikan semua berjalan dengan benar</p>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 7.1</span>
+          <span class="activity-title">Kembali ke Flowix — Isi Webhook URL</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;margin:14px 0 8px">Sekarang kamu sudah punya URL Vercel. Kembali ke dashboard Flowix dan isi Webhook URL:</p>
+          <div class="code-block">https://nama-projectmu.vercel.app/api/webhook</div>
+          <p style="font-size:13px;color:var(--muted);margin-top:10px">Salin Webhook Secret yang diberikan, lalu perbarui nilai <strong>WEBHOOK_SECRET</strong> di Vercel → Settings → Environment Variables. Setelah itu klik <strong>Redeploy</strong>.</p>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 7.2</span>
+          <span class="activity-title">Tes Website</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Buka URL website-mu di browser — pastikan beranda tampil benar</div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Buka <code>/admin</code> → login dengan password <strong>VITE_ADMIN_PASSWORD</strong></div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Di tab Dashboard, pastikan <strong>Saldo Flowix</strong> muncul — berarti koneksi OK</div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Coba top up salah satu produk untuk tes alur pembayaran QRIS</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 7.3</span>
+          <span class="activity-title">Atur Tampilan Toko di Admin</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Masuk ke <code>/admin</code> → tab <strong>Tema & Toko</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Ganti nama toko, tagline, dan logo sesuai brand-mu</div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Pilih tema warna, atur CS WhatsApp & media sosial</div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Klik <strong>Simpan Semua Settings</strong></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BAGIAN 8 -->
+    <section id="b8" class="section">
+      <div class="section-header">
+        <div class="section-num">08</div>
+        <div class="section-title">
+          <h2>Troubleshooting</h2>
+          <p>Solusi kalau ada masalah — klik untuk lihat</p>
+        </div>
+      </div>
+
+      <div class="trouble-card">
+        <div class="trouble-title" onclick="toggleTrouble(this)">🚫 Website tidak bisa dibuka / error 404 <span style="margin-left:auto;font-size:11px;color:var(--muted)">▼</span></div>
+        <ul class="trouble-solutions">
+          <li>Pastikan file <strong>vercel.json</strong> ikut terupload ke GitHub</li>
+          <li>Di Vercel → Settings → General, pastikan Framework Preset: <strong>Vite</strong></li>
+        </ul>
+      </div>
+
+      <div class="trouble-card">
+        <div class="trouble-title" onclick="toggleTrouble(this)">💳 Pembayaran berhasil tapi transaksi tidak diproses <span style="margin-left:auto;font-size:11px;color:var(--muted)">▼</span></div>
+        <ul class="trouble-solutions">
+          <li>Cek apakah <strong>Webhook URL</strong> sudah diisi di Flowix</li>
+          <li>Cek apakah <strong>WEBHOOK_SECRET</strong> di Vercel sama dengan di dashboard Flowix</li>
+          <li>Lihat log error: Vercel → Functions → /api/webhook → Logs</li>
+        </ul>
+      </div>
+
+      <div class="trouble-card">
+        <div class="trouble-title" onclick="toggleTrouble(this)">🗄️ Database error / tidak bisa simpan data <span style="margin-left:auto;font-size:11px;color:var(--muted)">▼</span></div>
+        <ul class="trouble-solutions">
+          <li>Pastikan <strong>MONGODB_URI</strong> benar — tidak ada spasi atau karakter salah</li>
+          <li>Cek Network Access di MongoDB Atlas → sudah allow <strong>0.0.0.0/0</strong>?</li>
+          <li>Pastikan user database sudah dibuat dan passwordnya benar</li>
+        </ul>
+      </div>
+
+      <div class="trouble-card">
+        <div class="trouble-title" onclick="toggleTrouble(this)">🔐 Tidak bisa login ke /admin <span style="margin-left:auto;font-size:11px;color:var(--muted)">▼</span></div>
+        <ul class="trouble-solutions">
+          <li>Password admin diambil dari variabel <strong>VITE_ADMIN_PASSWORD</strong> di Vercel</li>
+          <li>Kalau baru ubah nilainya, lakukan <strong>Redeploy</strong> terlebih dulu</li>
+        </ul>
+      </div>
+
+      <div class="trouble-card">
+        <div class="trouble-title" onclick="toggleTrouble(this)">🔑 Git push ditolak / authentication failed <span style="margin-left:auto;font-size:11px;color:var(--muted)">▼</span></div>
+        <ul class="trouble-solutions">
+          <li>GitHub tidak lagi menerima password biasa untuk push via terminal</li>
+          <li>Kamu harus pakai <strong>Personal Access Token (Classic)</strong> — lihat Langkah 1.3B</li>
+          <li>Buat token di: <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent2)">github.com/settings/tokens</a></li>
+          <li>Saat diminta password di terminal, paste token tersebut — bukan password GitHub-mu</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- CHECKLIST -->
+    <section id="done" class="section">
+      <div class="section-header">
+        <div class="section-num" style="opacity:1">🎉</div>
+        <div class="section-title">
+          <h2>Selamat! Website-mu Sudah Online</h2>
+          <p>Checklist semua yang sudah kamu selesaikan</p>
+        </div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(0,229,160,0.06),rgba(0,150,255,0.03));border:1px solid rgba(0,229,160,0.15);border-radius:14px;padding:22px 24px;">
+        <ul class="checklist">
+          <li><span class="check-icon">☑</span> Repository GitHub sudah dibuat dan file terupload</li>
+          <li><span class="check-icon">☑</span> Database MongoDB Atlas sudah aktif</li>
+          <li><span class="check-icon">☑</span> Akun Flowix terdaftar, API Key & Merchant ID sudah disalin</li>
+          <li><span class="check-icon">☑</span> Webhook Flowix sudah diset ke URL Vercel</li>
+          <li><span class="check-icon">☑</span> Semua Environment Variables sudah diisi di Vercel</li>
+          <li><span class="check-icon">☑</span> Website berhasil di-deploy dan bisa dibuka</li>
+          <li><span class="check-icon">☑</span> Cron job sudah aktif di cron-job.org</li>
+          <li><span class="check-icon">☑</span> Pengaturan toko sudah diatur dari halaman /admin</li>
+        </ul>
+      </div>
+      <p style="text-align:center;color:var(--muted);font-size:13px;margin-top:32px">— Selesai —</p>
+    </section>
+
+    <!-- BAGIAN 9: TERMUX -->
+    <section id="b9" class="section">
+      <div class="section-header">
+        <div class="section-num">09</div>
+        <div class="section-title">
+          <h2>Auto Push GitHub via Termux (HP Android)</h2>
+          <p>Upload project dari HP ke GitHub tanpa laptop — pakai script Python</p>
+        </div>
+      </div>
+
+      <div class="info-box warn" style="margin-bottom:14px">📱 <span><strong>Pastikan:</strong> Download Termux dari <a href="https://f-droid.org/packages/com.termux/" target="_blank" style="color:var(--accent2)">F-Droid</a> (bukan Play Store yang sudah outdated). Simpan semua folder project di folder <strong>Download</strong> HP kamu.</span></div>
+      <div class="info-box info" style="margin-bottom:20px">📂 <span>Sebelum mulai, buka <strong>Pengaturan HP → Info Aplikasi → Termux → Izin → Penyimpanan</strong>, pastikan izin penyimpanan sudah <strong>Diizinkan</strong>. Atau izinkan saat muncul pop-up di langkah pertama.</span></div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 9.1</span>
+          <span class="activity-title">Install Lingkungan (Git, Python & Akses Storage)</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 8px">Jalankan perintah berikut satu per satu di Termux:</p>
+          <div class="code-block"><span class="c"># Update sistem dulu</span>
+<span class="cmd">pkg update && pkg upgrade -y</span>
+
+<span class="c"># Install Git dan Python</span>
+<span class="cmd">pkg install git python -y</span>
+
+<span class="c"># Beri izin akses ke folder HP (SD Card/Internal)</span>
+<span class="cmd">termux-setup-storage</span>
+<span class="c"># → Klik "Allow / Izinkan" saat pop-up muncul</span></div>
+          <div class="info-box info">💡 <span>Jika pop-up tidak muncul, izinkan manual: <strong>Pengaturan → Info Aplikasi → Termux → Izin → Penyimpanan → Izinkan</strong></span></div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 9.2</span>
+          <span class="activity-title">Buat GitHub Personal Access Token (Classic)</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 8px">GitHub tidak menerima password biasa. Kamu perlu Token (Classic) sebagai pengganti password:</p>
+          <div class="token-box">
+            <h4>🔑 Cara Buat Token Classic</h4>
+            <ul class="token-steps">
+              <li>Buka <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent2)">github.com/settings/tokens</a></li>
+              <li>Klik <strong>Tokens (classic) → Generate new token (classic)</strong></li>
+              <li>Note: isi <code>Termux-Push</code></li>
+              <li>Expiration: pilih <strong>No expiration</strong> (agar tidak hangus)</li>
+              <li>Centang scope: <strong>repo</strong> (ini saja sudah cukup)</li>
+              <li>Klik <strong>Generate token</strong> → <strong style="color:var(--warn)">SALIN & SIMPAN tokennya sekarang!</strong> Token hanya tampil sekali!</li>
+            </ul>
+          </div>
+          <div class="info-box warn">⚠️ <span>Token ini yang kamu paste sebagai <strong>password</strong> saat terminal minta password. Username tetap username GitHub biasa.</span></div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 9.3</span>
+          <span class="activity-title">Siapkan Script Python (autopush.py)</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 8px">Script <code>autopush.py</code> sudah tersedia di dalam ZIP source code. Tinggal pindahkan ke folder <strong>Download</strong>:</p>
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Ekstrak ZIP source code → cari file <code>autopush.py</code></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Pindahkan file <code>autopush.py</code> ke folder <strong>Download</strong> HP kamu</div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Di Termux, masuk ke folder Download:</div></div>
+          </div>
+          <div class="code-block"><span class="cmd">cd</span> /sdcard/Download
+<span class="c"># atau</span>
+<span class="cmd">cd</span> ~/storage/downloads</div>
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 8px">Simpan token agar tidak perlu dimasukkan ulang tiap push:</p>
+          <div class="code-block"><span class="cmd">git config</span> --global credential.helper store</div>
+          <div class="info-box info">💡 <span>Tidak perlu <code>nano</code> lagi karena script sudah ada di ZIP. Cukup pindah ke folder Download lalu jalankan.</span></div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 9.4</span>
+          <span class="activity-title">Jalankan Script & Cara Pengisian</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 8px">Masuk ke folder yang berisi script, lalu jalankan:</p>
+          <div class="code-block"><span class="cmd">cd</span> /sdcard/Download
+<span class="cmd">python</span> autopush.py</div>
+
+          <p style="font-size:13px;font-weight:700;color:var(--text);margin:14px 0 8px">Isi input saat script berjalan:</p>
+          <table class="env-table">
+            <thead><tr><th>Input yang Ditanya</th><th>Contoh Isian</th></tr></thead>
+            <tbody>
+              <tr><td class="env-key">Nama & Email</td><td class="env-note">Isi sesuai akun GitHub kamu (Nama / email@gmail.com)</td></tr>
+              <tr><td class="env-key">Lokasi Folder Project</td><td class="env-note">Di Download HP: <code>/sdcard/Download/topup-fixed</code></td></tr>
+              <tr><td class="env-key">URL Repository</td><td class="env-note"><code>https://github.com/username/topup-store.git</code></td></tr>
+              <tr><td class="env-key">Pesan Commit</td><td class="env-note">Bebas, contoh: <code>Update fitur baru</code></td></tr>
+              <tr><td class="env-key">Username GitHub</td><td class="env-note">Ketik username GitHub kamu</td></tr>
+              <tr><td class="env-key">Password</td><td class="env-note"><strong style="color:var(--warn)">PASTE TOKEN</strong> yang dibuat di Langkah 9.2 (karakter tidak terlihat, langsung Enter)</td></tr>
+            </tbody>
+          </table>
+          <div class="info-box success">✅ <span>Setelah berhasil, cek repo GitHub kamu — file-file project sudah terupload!</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BAGIAN 10: NAMA WEBSITE & JASA -->
+    <section id="b10" class="section">
+      <div class="section-header">
+        <div class="section-num">10</div>
+        <div class="section-title">
+          <h2>Nama Website & Layanan Bantuan</h2>
+          <p>Cara memberi nama toko dan opsi bantuan pemasangan</p>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">INFO</span>
+          <span class="activity-title">🏷️ Cara Memberi Nama Website / Toko</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 8px">Ada dua cara untuk mengatur nama website / toko kamu:</p>
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">A</div><div class="step-text"><strong>Lewat Halaman Admin (Rekomendasi)</strong> — Login ke <code>/admin</code> → tab <strong>Tema & Toko</strong> → ganti nama toko, tagline, logo → klik <strong>Simpan</strong>.</div></div>
+            <div class="step-item"><div class="step-circle">B</div><div class="step-text"><strong>Lewat Environment Variables</strong> — Isi variabel <code>VITE_STORE_NAME</code> di Vercel dengan nama toko kamu, lalu <strong>Redeploy</strong>.</div></div>
+          </div>
+          <div class="info-box info">💡 <span>Bisa pakai kedua cara sekaligus. Nama di <code>/admin</code> tampil di halaman web, sedangkan <code>VITE_STORE_NAME</code> dipakai di beberapa bagian sistem (tab browser, dll).</span></div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge warn">BANTUAN</span>
+          <span class="activity-title">🛠️ Masih Bingung? Jasa Pemasangan Tersedia!</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <div style="background:linear-gradient(135deg,rgba(0,229,160,0.07),rgba(0,150,255,0.04));border:1px solid rgba(0,229,160,0.2);border-radius:12px;padding:20px 22px;text-align:center;margin-top:14px;">
+            <div style="font-size:32px;margin-bottom:8px">🎉</div>
+            <h3 style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--accent);margin-bottom:6px">JASA SEWA PEMASANGAN</h3>
+            <p style="font-size:14px;color:var(--muted);margin-bottom:14px">Kalau masih bingung cara setup-nya, bisa pakai jasa pemasangan.<br>Kami yang setup semuanya dari awal sampai website online!</p>
+            <div style="display:inline-block;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.3);border-radius:10px;padding:10px 28px;font-size:24px;font-weight:700;color:var(--accent);letter-spacing:1px;margin-bottom:14px">Rp 10.000</div>
+            <p style="font-size:12px;color:var(--muted)">✅ Deploy ke Vercel &nbsp;|&nbsp; ✅ Setup MongoDB &nbsp;|&nbsp; ✅ Konfigurasi .env &nbsp;|&nbsp; ✅ Tes sampai jalan</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  function toggleCard(header) {
+    header.closest('.activity-card').classList.toggle('open');
+  }
+
+  function toggleTrouble(title) {
+    title.closest('.trouble-card').classList.toggle('open');
+  }
+
+  // Active nav on scroll
+  const sections = document.querySelectorAll('.section');
+  const navItems = document.querySelectorAll('.nav-item');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navItems.forEach(n => n.classList.toggle('active', n.getAttribute('href') === '#' + e.target.id));
+      }
+    });
+  }, { threshold: 0.25 });
+  sections.forEach(s => observer.observe(s));
+
+  // Progress bar
+  window.addEventListener('scroll', () => {
+    const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+    document.getElementById('progFill').style.width = Math.min(100, pct) + '%';
+    document.getElementById('progLabel').textContent = Math.min(10, Math.round(pct / 100 * 10)) + ' / 10 bagian';
+  });
+</script>
+</body>
+</html>
