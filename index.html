@@ -573,7 +573,7 @@
               <tr><td class="env-key">PRICE_TOKEN_SECRET</td><td class="env-val">19a00081dd...</td><td class="env-note">Token keamanan harga produk — generate!</td></tr>
               <tr><td class="env-key">VAPID_PUBLIC_KEY</td><td class="env-val">BK3KOS93...</td><td class="env-note">Push notifikasi — opsional, generate!</td></tr>
               <tr><td class="env-key">VAPID_PRIVATE_KEY</td><td class="env-val">DrD9MWORG...</td><td class="env-note">Push notifikasi — opsional, generate!</td></tr>
-              <tr><td class="env-key">VAPID_SUBJECT</td><td class="env-val">mailto:email@...</td><td class="env-note">Email untuk push notif — opsional</td></tr>
+              <tr><td class="env-key">VAPID_EMAIL=</td><td class="env-val">mailto:email@...</td><td class="env-note">Email untuk push notif — opsional</td></tr>
               <tr><td class="env-key">VITE_STORE_NAME</td><td class="env-val">Toko Top Up</td><td class="env-note">Nama toko yang tampil di website</td></tr>
               <tr><td class="env-key" style="text-decoration:line-through;opacity:0.5">TZ</td><td class="env-val" style="opacity:0.5">Asia/Jakarta</td><td class="env-note"><span style="color:var(--muted)">⚠️ <strong>Hapus / skip saja</strong> — sudah otomatis Asia/Jakarta, tidak perlu diisi</span></td></tr>
             </tbody>
@@ -637,7 +637,7 @@
             <div class="step-item"><div class="step-circle">1</div><div class="step-text">Buka <a href="https://vapidkeys.com" target="_blank" style="color:var(--accent2)">vapidkeys.com</a> → klik <strong>Generate</strong></div></div>
             <div class="step-item"><div class="step-circle">2</div><div class="step-text">Salin <strong>Public Key</strong> → paste ke <code>VAPID_PUBLIC_KEY</code> di Vercel</div></div>
             <div class="step-item"><div class="step-circle">3</div><div class="step-text">Salin <strong>Private Key</strong> → paste ke <code>VAPID_PRIVATE_KEY</code> di Vercel</div></div>
-            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Isi <code>VAPID_SUBJECT</code> dengan email kamu, format: <code>mailto:email@gmail.com</code></div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Isi <code>VAPID_EMAIL</code> dengan email kamu, format: <code>mailto:email@gmail.com</code></div></div>
           </div>
           <div class="info-box success">✅ <span>Tidak perlu install npm atau terminal — generate langsung dari browser, langsung copy-paste ke Vercel.</span></div>
         </div>
