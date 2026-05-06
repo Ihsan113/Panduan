@@ -212,6 +212,7 @@
     <a class="nav-item" href="#b8"><span class="num">8</span> Troubleshooting</a>
     <a class="nav-item" href="#b9"><span class="num">9</span> Termux Auto Push</a>
     <a class="nav-item" href="#b10"><span class="num">10</span> Nama Web & Bantuan</a>
+    <a class="nav-item" href="#b11"><span class="num">11</span> Deploy Termux → Vercel</a>
     <a class="nav-item" href="#done"><span class="num">✓</span> Checklist Final</a>
   </nav>
 
@@ -575,6 +576,16 @@
               <tr><td class="env-key">VAPID_PRIVATE_KEY</td><td class="env-val">DrD9MWORG...</td><td class="env-note">Push notifikasi — opsional, generate!</td></tr>
               <tr><td class="env-key">VAPID_EMAIL=</td><td class="env-val">mailto:email@...</td><td class="env-note">Email untuk push notif — opsional</td></tr>
               <tr><td class="env-key">VITE_STORE_NAME</td><td class="env-val">Toko Top Up</td><td class="env-note">Nama toko yang tampil di website</td></tr>
+              <tr style="background:rgba(0,150,255,0.05)">
+                <td class="env-key" style="border-left:3px solid var(--accent2)">LICENSE_KEY</td>
+                <td class="env-val" style="color:var(--accent2)">XXXXXX-XXXXXX-XXXXXX-XXXXXX</td>
+                <td class="env-note">🔑 <strong>Minta ke admin</strong> — lisensi aktivasi aplikasi</td>
+              </tr>
+              <tr style="background:rgba(0,150,255,0.05)">
+                <td class="env-key" style="border-left:3px solid var(--accent2)">LICENSE_SERVER</td>
+                <td class="env-val" style="color:var(--accent2)">https://license.yoursite.com</td>
+                <td class="env-note">🔑 <strong>Minta ke admin</strong> — URL server validasi lisensi</td>
+              </tr>
               <tr><td class="env-key" style="text-decoration:line-through;opacity:0.5">TZ</td><td class="env-val" style="opacity:0.5">Asia/Jakarta</td><td class="env-note"><span style="color:var(--muted)">⚠️ <strong>Hapus / skip saja</strong> — sudah otomatis Asia/Jakarta, tidak perlu diisi</span></td></tr>
             </tbody>
           </table>
@@ -993,6 +1004,144 @@
       </div>
     </section>
 
+    <!-- BAGIAN 11: DEPLOY TERMUX → VERCEL TANPA GITHUB -->
+    <section id="b11" class="section">
+      <div class="section-header">
+        <div class="section-num">11</div>
+        <div class="section-title">
+          <h2>Deploy Langsung dari Termux ke Vercel (Tanpa GitHub)</h2>
+          <p>Alternatif deploy via Vercel CLI — upload langsung dari HP, tanpa perlu repo GitHub</p>
+        </div>
+      </div>
+
+      <div class="info-box info" style="margin-bottom:16px">💡 <span>Metode ini cocok kalau kamu <strong>tidak ingin pakai GitHub</strong> sama sekali. Vercel CLI bisa deploy langsung dari folder lokal HP ke Vercel, tanpa perlu push ke repo dulu.</span></div>
+      <div class="info-box warn" style="margin-bottom:20px">📱 <span>Pastikan Termux sudah ter-install dari <a href="https://f-droid.org/packages/com.termux/" target="_blank" style="color:var(--accent2)">F-Droid</a> dan sudah punya akses penyimpanan (<code>termux-setup-storage</code>). Lihat <strong>Bagian 9</strong> jika belum setup.</span></div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 11.1</span>
+          <span class="activity-title">Install Node.js & Vercel CLI di Termux</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 8px">Jalankan perintah berikut satu per satu di Termux:</p>
+          <div class="code-block"><span class="c"># Update paket Termux dulu</span>
+<span class="cmd">pkg update && pkg upgrade -y</span>
+
+<span class="c"># Install Node.js (sudah include npm)</span>
+<span class="cmd">pkg install nodejs -y</span>
+
+<span class="c"># Verifikasi versi Node & npm</span>
+<span class="cmd">node -v</span>
+<span class="cmd">npm -v</span>
+
+<span class="c"># Install Vercel CLI secara global</span>
+<span class="cmd">npm install -g vercel</span>
+
+<span class="c"># Verifikasi Vercel CLI berhasil ter-install</span>
+<span class="cmd">vercel --version</span></div>
+          <div class="info-box success">✅ <span>Jika muncul versi Vercel (contoh: <code>Vercel CLI 40.x.x</code>), berarti install berhasil dan siap dipakai.</span></div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 11.2</span>
+          <span class="activity-title">Login ke Akun Vercel dari Termux</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 8px">Login ke akun Vercel-mu langsung dari terminal:</p>
+          <div class="code-block"><span class="cmd">vercel login</span></div>
+          <p style="font-size:13px;font-weight:700;color:var(--text);margin:14px 0 8px">Setelah perintah dijalankan:</p>
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Terminal akan menampilkan beberapa opsi login — pilih <strong>Continue with Email</strong></div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Masukkan email yang kamu pakai di Vercel, lalu tekan <strong>Enter</strong></div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Buka email kamu → cari email dari Vercel → klik tombol <strong>Verify</strong></div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Kembali ke Termux — akan muncul pesan <strong>"Congratulations! You are now logged in"</strong></div></div>
+          </div>
+          <div class="info-box info">💡 <span>Alternatif: pilih <strong>Continue with GitHub</strong> jika kamu sudah punya akun GitHub yang terhubung ke Vercel. Browser akan terbuka otomatis untuk otorisasi.</span></div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 11.3</span>
+          <span class="activity-title">Masuk ke Folder Project & Jalankan Deploy</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 8px">Pindah ke folder project kamu di HP, lalu deploy langsung:</p>
+          <div class="code-block"><span class="c"># Masuk ke folder project (sesuaikan nama folder)</span>
+<span class="cmd">cd</span> /sdcard/Download/topup-fixed
+
+<span class="c"># Jalankan deploy ke Vercel</span>
+<span class="cmd">vercel --prod</span></div>
+          <p style="font-size:13px;font-weight:700;color:var(--text);margin:14px 0 8px">Jawab pertanyaan yang muncul di terminal:</p>
+          <table class="env-table">
+            <thead><tr><th>Pertanyaan</th><th>Jawaban</th></tr></thead>
+            <tbody>
+              <tr><td class="env-key">Set up and deploy?</td><td class="env-note">Ketik <strong>Y</strong> → Enter</td></tr>
+              <tr><td class="env-key">Which scope?</td><td class="env-note">Pilih akun kamu → Enter</td></tr>
+              <tr><td class="env-key">Link to existing project?</td><td class="env-note"><strong>N</strong> jika deploy pertama kali → Enter</td></tr>
+              <tr><td class="env-key">Project name?</td><td class="env-note">Isi nama project (contoh: <code>topup-store</code>) → Enter</td></tr>
+              <tr><td class="env-key">In which directory is your code?</td><td class="env-note">Biarkan kosong (sudah di folder yang benar) → Enter</td></tr>
+              <tr><td class="env-key">Want to modify settings?</td><td class="env-note">Ketik <strong>N</strong> → Enter</td></tr>
+            </tbody>
+          </table>
+          <div class="info-box warn">⚠️ <span>Jika project sudah pernah di-deploy sebelumnya, jawab <strong>Y</strong> pada pertanyaan "Link to existing project?" dan pilih nama project yang sesuai.</span></div>
+          <div class="info-box success" style="margin-top:10px">✅ <span>Setelah proses selesai, Vercel langsung memberikan URL production seperti <code>topup-store.vercel.app</code>. Buka URL tersebut untuk mengecek hasilnya!</span></div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge">LANGKAH 11.4</span>
+          <span class="activity-title">Isi Environment Variables (Wajib Setelah Deploy Pertama)</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 8px">Environment Variables tidak bisa diisi lewat CLI saat deploy pertama. Isi via dashboard Vercel setelah project terbuat:</p>
+          <div class="steps-list">
+            <div class="step-item"><div class="step-circle">1</div><div class="step-text">Buka <a href="https://vercel.com/dashboard" target="_blank">vercel.com/dashboard</a> di browser HP</div></div>
+            <div class="step-item"><div class="step-circle">2</div><div class="step-text">Klik nama project yang baru di-deploy → tab <strong>Settings → Environment Variables</strong></div></div>
+            <div class="step-item"><div class="step-circle">3</div><div class="step-text">Isi semua variabel sesuai <strong>Bagian 5</strong> (termasuk <code>LICENSE_KEY</code> dan <code>LICENSE_SERVER</code> dari admin)</div></div>
+            <div class="step-item"><div class="step-circle">4</div><div class="step-text">Setelah semua terisi, kembali ke Termux dan jalankan ulang deploy:</div></div>
+          </div>
+          <div class="code-block"><span class="c"># Redeploy setelah environment variables diisi</span>
+<span class="cmd">cd</span> /sdcard/Download/topup-fixed
+<span class="cmd">vercel --prod</span></div>
+          <div class="info-box danger">⛔ <span>Jangan lupa <strong>redeploy</strong> setelah mengisi Environment Variables — perubahan tidak berlaku sebelum deploy ulang!</span></div>
+        </div>
+      </div>
+
+      <div class="activity-card">
+        <div class="activity-header" onclick="toggleCard(this)">
+          <span class="step-badge alt">TIPS</span>
+          <span class="activity-title">🔄 Update Project — Cara Deploy Ulang Setelah Edit File</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="activity-body">
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 8px">Setiap kali kamu mengubah file di folder project, tinggal jalankan satu perintah ini dari Termux:</p>
+          <div class="code-block"><span class="cmd">cd</span> /sdcard/Download/topup-fixed
+<span class="cmd">vercel --prod</span></div>
+          <p style="font-size:13px;color:var(--muted);margin:14px 0 8px">Vercel CLI akan langsung upload perubahan dan memperbarui deployment production-mu. Tidak perlu GitHub sama sekali!</p>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-top:14px;">
+            <p style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">⚖️ Perbandingan Metode Deploy:</p>
+            <table class="env-table" style="margin:0">
+              <thead><tr><th>Aspek</th><th>Via GitHub (Bagian 1–4)</th><th>Via Termux CLI (Bagian 11)</th></tr></thead>
+              <tbody>
+                <tr><td class="env-note">Butuh GitHub?</td><td class="env-note" style="color:var(--warn)">Ya</td><td class="env-note" style="color:var(--accent)">Tidak</td></tr>
+                <tr><td class="env-note">Auto-deploy saat push?</td><td class="env-note" style="color:var(--accent)">Ya, otomatis</td><td class="env-note" style="color:var(--muted)">Manual (<code>vercel --prod</code>)</td></tr>
+                <tr><td class="env-note">Cocok untuk pemula?</td><td class="env-note" style="color:var(--accent)">Ya</td><td class="env-note" style="color:var(--accent)">Ya</td></tr>
+                <tr><td class="env-note">Butuh koneksi internet?</td><td class="env-note">Ya (keduanya butuh)</td><td class="env-note">Ya (keduanya butuh)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -1021,7 +1170,7 @@
   window.addEventListener('scroll', () => {
     const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
     document.getElementById('progFill').style.width = Math.min(100, pct) + '%';
-    document.getElementById('progLabel').textContent = Math.min(10, Math.round(pct / 100 * 10)) + ' / 10 bagian';
+    document.getElementById('progLabel').textContent = Math.min(11, Math.round(pct / 100 * 11)) + ' / 11 bagian';
   });
 </script>
 </body>
